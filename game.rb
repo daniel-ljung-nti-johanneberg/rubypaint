@@ -1,27 +1,29 @@
 require 'gosu'
-
+require 'matrix'
 
 
 class Game < Gosu::Window
 
     def initialize
-        @width = 640
-        @height = 480
-        @pixel_size = 15
+        @width = 1920
+        @height = 1080
+        @pixel_size = 4
         
-        super @width, @height
+        super @width, @height, fullscreen: true
         self.caption = "Paint-spel"
 
         @first_time = true
 
-        @drawing = []
+        @drawing = Hash.new(0x0)
 
-        (0...@height/@pixel_size).each do |y|
-            @drawing << []
-            (0..@width/@pixel_size).each do |x|
-                @drawing[y] << 0
-            end
-        end
+        @color = 0xffffffff
+
+        # (0...@height/@pixel_size).each do |y|
+        #     @drawing << []
+        #     (0..@width/@pixel_size).each do |x|
+        #         @drawing[y] << 0
+        #     end
+        # end
 
         # p @drawing
 
@@ -33,38 +35,36 @@ class Game < Gosu::Window
  
     def update
 
-        
-        # if @first_time == true || "#{mouse_x},#{mouse_y}" != @drawthis[@drawthis.length - 1]
-        #     @drawthis << "#{mouse_x},#{mouse_y}"
-        #     @first_time = false
-        #     p @first_time
-        #     p @drawthis[-1]
-        #     p @drawthis.length
-        # end
-        if !(mouse_x < 0 || mouse_x > @width || mouse_y < 0 || mouse_y > @height) && Gosu.button_down?(Gosu::KB_SPACE)
-            @drawing[mouse_y.to_i / @pixel_size][mouse_x.to_i / @pixel_size] = 0xf12ff2ff
+        if Gosu.button_down?(Gosu::KbLeft)
+            @color = 0xffffffff
         end
 
-        if Gosu.button_down?(Gosu::KB_)
+        if Gosu.button_down?(Gosu::KbRight)
+            @color = 0xff2f43ff
+        end
+
+        if Gosu.button_down?(Gosu::KbUp)
+            @color = 0x00ff00ff
+        end
+
+        if Gosu.button_down?(Gosu::KbDown)
+            @color = 0xff244f20
+        end
+
+        if !(mouse_x < 0 || mouse_x > @width || mouse_y < 0 || mouse_y > @height) && Gosu.button_down?(Gosu::KB_SPACE)
+            @drawing[Vector[mouse_x.to_i / @pixel_size, mouse_y.to_i / @pixel_size]] = @color
+        end
+
+        if Gosu.button_down?(Gosu::KbEscape)
+            close 
+        end
 
     end
 
     def draw
-        @drawing.each_with_index do |row, y|
-            row.each_with_index do |cell, x|
-                if cell == 0
-                    next
-                end
-                draw_rect(x * @pixel_size, y * @pixel_size, @pixel_size, @pixel_size, Gosu::Color.new(cell))
-            end
+        @drawing.each do |coord, color|
+            draw_rect(coord[0] * @pixel_size, coord[1] * @pixel_size, @pixel_size, @pixel_size, Gosu::Color.new(color))
         end
-
-        
-
-        # @drawing[10][50] = draw_rect(x, y, 1, 1, Gosu::Color.new(0xff_ffffff))
-        # draw_rect(@drawthis[@i].split(',')[0].to_f, @drawthis[@i].split(',')[1].to_f, 30, 30, Gosu::Color.new(0xff_ffffff))
-
-
     end
 
 
