@@ -7,14 +7,18 @@ class Game < Gosu::Window
     def initialize
         @width = 1920
         @height = 1080
-        @pixel_size = 1
+        @pixel_size = 5
         
         super @width, @height, fullscreen: true
         self.caption = "Paint-spel"
 
         @first_time = true
 
-        @drawing = Hash.new(0x0)
+        @drawing = []
+
+        @draw_section = Hash.new(0x0)
+
+        @released = false
 
         @color = 0xffffffff
 
@@ -31,11 +35,8 @@ class Game < Gosu::Window
 
         # @drawing[10][10] = 0xffffffff
     end
-    
  
     def update
-        # the cursed point
-        @drawing[Vector[-1000000000, -1000000000]] = @color
 
         if Gosu.button_down?(Gosu::KbLeft)
             @color = 0xffffffff
@@ -54,7 +55,12 @@ class Game < Gosu::Window
         end
 
         if !(mouse_x < 0 || mouse_x > @width || mouse_y < 0 || mouse_y > @height) && Gosu.button_down?(Gosu::KB_SPACE)
-            @drawing[Vector[mouse_x.to_i / @pixel_size, mouse_y.to_i / @pixel_size]] = @color
+            (@draw_section[Vector[mouse_x.to_i / @pixel_size, mouse_y.to_i / @pixel_size]] = @color)
+            @released = true
+        elsif @released
+            @drawing << @draw_section
+            p @drawing
+            @released = false
         end
 
         if Gosu.button_down?(Gosu::KbEscape)
@@ -64,18 +70,16 @@ class Game < Gosu::Window
     end
 
     def draw
-        @drawing.each do |coord, color|
+        @draw_section.each do |coord, color|
             
             draw_rect(coord[0] * @pixel_size, coord[1] * @pixel_size, @pixel_size, @pixel_size, Gosu::Color.new(color))
             if @old_value.class != NilClass && (coord - @old_value).magnitude <= 150
-                    draw_line(coord[0] * @pixel_size, coord[1] * @pixel_size, Gosu::Color.new(color), @old_value[0] * @pixel_size, @old_value[1] * @pixel_size, Gosu::Color.new(color))
+                draw_line(coord[0] * @pixel_size, coord[1] * @pixel_size, Gosu::Color.new(color), @old_value[0] * @pixel_size, @old_value[1] * @pixel_size, Gosu::Color.new(color))
             end
             @old_value = coord
         end
-
     end
-
-    # hash i hash system????
+    # NY HASH SKITe
 end
 
 
