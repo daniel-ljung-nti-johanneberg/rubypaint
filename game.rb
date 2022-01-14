@@ -2,11 +2,23 @@ require 'gosu'
 require 'matrix'
 
 
+
+
 class Game < Gosu::Window
 
+    attr_accessor :menu
+
+
     def initialize
+
+        
         @width = 1920
         @height = 1080
+
+        @input_pos = 0
+
+        @delay = 0.1
+    
         @pixel_size = 2
         
         super @width, @height, fullscreen: true
@@ -26,14 +38,20 @@ class Game < Gosu::Window
 
         @i = 0
 
+        @word_list = ["gurka","äpple","sten","hus", "snowboard"]
+
+        @random_word = @word_list[rand(0..(@word_list.length-1))]
+
         @text = Gosu::Image.from_text(self, "COLOR", Gosu.default_font_name, 45)
 
-        @word = Gosu::Image.from_text(self, "COLOR", Gosu.default_font_name, 45)
+        @word = Gosu::Image.from_text(self, @random_word, Gosu.default_font_name, 90)
 
-        @reveal_word = true
+        @reveal_word = false
     end
  
     def update
+
+
 
         if Gosu.button_down?(Gosu::KbLeft)
             @color = 0xffffffff
@@ -45,10 +63,12 @@ class Game < Gosu::Window
 
         if Gosu.button_down?(Gosu::KbUp)
             @color = 0xff_ff0000
+            @input_pos -= 1
         end
 
         if Gosu.button_down?(Gosu::KbDown)
             @color = 0xff_00ff00
+            @input_pos += 1
         end
 
         if Gosu.button_down?(Gosu::KbZ)
@@ -57,7 +77,7 @@ class Game < Gosu::Window
         end
 
         if Gosu.button_down?(Gosu::KbR)
-
+            @reveal_word = true
         end
 
         if !(mouse_x < 0 || mouse_x > @width || mouse_y < 0 || mouse_y > @height) && Gosu.button_down?(Gosu::KB_SPACE)
@@ -73,10 +93,21 @@ class Game < Gosu::Window
             close 
         end
 
+    
+        @menu = Menu.new(@input_pos)
+
     end
 
     def draw
+        
+        @menu.draw()
+
         @text.draw(10, 20, 0, 1, 1, Gosu::Color.new(@color))
+        if @reveal_word
+            @word.draw(10, 50, 0, 1, 1, Gosu::Color.new(@color))
+        else
+            @word.draw(10, 50, 0, 1, 1, Gosu::Color.new(0x00_000000))
+        end
 
         @drawing.each do |index|
             @old_value = nil
@@ -92,6 +123,49 @@ class Game < Gosu::Window
             draw_rect(coord[0] * @pixel_size, coord[1] * @pixel_size, @pixel_size, @pixel_size, Gosu::Color.new(color))
         end
     end
+end
+
+
+class Menu
+
+    attr_accessor :input_pos
+
+    def initialize(input_pos)
+
+        @position = input_pos
+
+        @title = Gosu::Image.from_text(self, "paintly: more than art", Gosu.default_font_name, 90)
+
+        @play = Gosu::Image.from_text(self, "Start game", Gosu.default_font_name, 60)
+
+        @settings = Gosu::Image.from_text(self, "Settings", Gosu.default_font_name, 60)
+
+        @exit = Gosu::Image.from_text(self, "Exit", Gosu.default_font_name, 60)
+        
+    end
+
+    def draw
+
+        @title.draw(600, 100, 0, 1, 1, Gosu::Color.new(0xffffffff))
+
+        case @position
+        when 0
+            @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xffffffff))
+            @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
+            @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
+        when 1
+            @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
+            @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xffffffff))
+            @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
+        when 2
+            @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
+            @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
+            @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xffffffff))
+        end
+
+    end
+
+
 end
 
 
