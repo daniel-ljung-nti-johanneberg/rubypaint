@@ -17,16 +17,18 @@ class Game < Gosu::Window
 
         @input_pos = 0
 
-        @delay = 0.1
+        @last_time = Time.now
+
+        @delay = 0.3
     
         @pixel_size = 2
         
         super @width, @height, fullscreen: true
         self.caption = "Paint-spel"
 
-        @first_time = true
-
         @drawing = []
+
+        @menu = Menu.new(0)
 
         @draw_section = Hash.new(0x0)
 
@@ -93,8 +95,22 @@ class Game < Gosu::Window
             close 
         end
 
-    
-        @menu = Menu.new(@input_pos)
+        if @input_pos > 30 
+
+            @input_pos = 30
+
+        elsif @input_pos < 0
+
+            @input_pos = 0
+
+        end
+
+        if Time.now - @last_time > @delay
+            @menu = Menu.new(@input_pos)
+            @last_time = Time.now
+        end
+
+
 
     end
 
@@ -149,15 +165,15 @@ class Menu
         @title.draw(600, 100, 0, 1, 1, Gosu::Color.new(0xffffffff))
 
         case @position
-        when 0
+        when 0..10
             @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xffffffff))
             @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
             @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
-        when 1
+        when 11..20
             @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
             @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xffffffff))
             @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
-        when 2
+        when 21..30
             @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
             @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
             @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xffffffff))
