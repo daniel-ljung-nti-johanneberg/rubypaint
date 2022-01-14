@@ -22,9 +22,15 @@ class Game < Gosu::Window
 
         @color = 0xffffffff
 
+        @players = []
+
         @i = 0
 
         @text = Gosu::Image.from_text(self, "COLOR", Gosu.default_font_name, 45)
+
+        @word = Gosu::Image.from_text(self, "COLOR", Gosu.default_font_name, 45)
+
+        @reveal_word = true
     end
  
     def update
@@ -48,6 +54,10 @@ class Game < Gosu::Window
         if Gosu.button_down?(Gosu::KbZ)
             @drawing.delete_at(-1)
             sleep(0.1)
+        end
+
+        if Gosu.button_down?(Gosu::KbR)
+
         end
 
         if !(mouse_x < 0 || mouse_x > @width || mouse_y < 0 || mouse_y > @height) && Gosu.button_down?(Gosu::KB_SPACE)
