@@ -1,22 +1,3 @@
-# This example demonstrates use of the TextInput class with three text field widgets.
-# One can cycle through them with tab, or click into the text fields and change their contents.
-
-# The way TextInput works is that you create an instance of it, and then assign it to the text_input
-# attribute of your window.
-# Until you set this attribute to nil again, the TextInput object will then build a string from user
-# input that can be accessed via TextInput#text.
-
-# The TextInput object also maintains the position of the caret, which is defined as the index of
-# its right neighbour character, i.e. a carent_pos of 0 is always the left-most position, and a
-# caret_pos of text.length is always the right-most position.
-# There is a second attribute called selection_start that is equal to caret_pos when there is no
-# selection, and otherwise defines the selected range. If you set caret_pos to a different value,
-# you usually want to set selection_start as well.
-
-# A TextInput object is purely abstract. Drawing the input field is left to the user.
-# In this example, we are subclassing TextInput to add this code, but you can also work with
-# composition instead of inheritance.
-
 require "gosu"
 
 class TextField < Gosu::TextInput
@@ -107,11 +88,7 @@ class TextInputDemo < (Example rescue Gosu::Window)
 
 
     text =
-      "This demo explains (in the source code) how to use the Gosu::TextInput API by building a little TextField class around it.
-
-      Each text field can take up to 30 characters, and you can use Tab to switch between them.
-
-      As in every example, press <b>E</b> to look at the source code."
+      "Welcome put in the players name below and click the start button!"
 
     # Remove all leading spaces so the text is left-aligned
     text.gsub! /^ +/, ""
@@ -119,7 +96,10 @@ class TextInputDemo < (Example rescue Gosu::Window)
     @text = Gosu::Image.from_markup text, 20, width: 540
 
     # Set up an array of three text fields.
-    @text_fields = Array.new(3) { |index| TextField.new(self, 50, 300 + index * 50) }
+    @text_fields = Array.new(2) { |index| TextField.new(self, 50, 300 + index * 50) }
+
+
+    
   end
 
   def needs_cursor?

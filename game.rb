@@ -1,12 +1,6 @@
 require 'gosu'
 require 'matrix'
-
-
-
-
 class Game < Gosu::Window
-
-    attr_accessor :menu
 
 
     def initialize
@@ -19,9 +13,9 @@ class Game < Gosu::Window
 
         @last_time = Time.now
 
-        @delay = 0.3
-    
-        @menu = Menu.new(@input_pos)
+        @lasttimer_time = Time.now
+
+        @delay = 0.1
 
         @pixel_size = 2
         
@@ -30,15 +24,13 @@ class Game < Gosu::Window
 
         @drawing = []
 
-        @menu = Menu.new(0)
+        @menu = Menu.new()
 
         @draw_section = Hash.new(0x0)
 
         @released = false
 
         @color = 0xffffffff
-
-        @players = []
 
         @i = 0
 
@@ -51,10 +43,22 @@ class Game < Gosu::Window
         @word = Gosu::Image.from_text(self, @random_word, Gosu.default_font_name, 90)
 
         @reveal_word = false
+
+        @action = "home"
+
+        @plrs = 0
+
+        @crrnt_plr = 0
+
+        @timer = 0
+
     end
  
     def update
 
+        @player_count = Gosu::Image.from_text(self, "Player #{@crrnt_plr} turn:", Gosu.default_font_name, 60)
+
+        @timer_text = Gosu::Image.from_text(self, "Timer:#{@timer} ", Gosu.default_font_name, 45)
 
 
         if Gosu.button_down?(Gosu::KbLeft)
@@ -67,21 +71,89 @@ class Game < Gosu::Window
 
         if Gosu.button_down?(Gosu::KbUp)
             @color = 0xff_ff0000
-            @input_pos -= 1
+            if Time.now - @last_time > @delay
+                @input_pos -= 1
+                @last_time = Time.now
+            end
+            
         end
 
         if Gosu.button_down?(Gosu::KbDown)
             @color = 0xff_00ff00
-            @input_pos += 1
+            if Time.now - @last_time > @delay
+                @input_pos += 1
+                @last_time = Time.now
+            end
         end
 
-        if Gosu.button_down?(Gosu::KbZ)
-            @drawing.delete_at(-1)
-            sleep(0.1)
+        if Gosu.button_down?(Gosu::KbZ) && Gosu.button_down?(Gosu::KB_LEFT_CONTROL)
+            if Time.now - @last_time > @delay
+                @drawing.delete_at(-1)
+                @last_time = Time.now
+            end
         end
 
         if Gosu.button_down?(Gosu::KbR)
             @reveal_word = true
+        end
+
+        if Gosu.button_down?(Gosu::KB_SPACE) && @action == "start"
+            if Time.now - @last_time > @delay
+                @plrs += 1
+                @last_time = Time.now
+            end
+        end
+
+        
+        if Gosu.button_down?(Gosu::KB_BACKSPACE) && @action == "start"
+            if Time.now - @last_time > @delay && @plrs != 1
+                @plrs -= 1
+                @last_time = Time.now
+            end
+        end
+
+        if Gosu.button_down?(Gosu::KB_SPACE) && @input_pos == 0
+            @action = "start"
+        end
+
+        if Gosu.button_down?(Gosu::KbP) && @action == "start"
+            @action = "started"
+            @timer = 20
+        end
+
+        if Gosu.button_down?(Gosu::KbE) && @action == "started"
+            if Time.now - @last_time > @delay && @crrnt_plr != @plrs
+                @crrnt_plr += 1
+                @last_time = Time.now
+            end
+        end
+
+        if @timer == 0
+            @timer = 20
+            @crrnt_plr += 1
+        end
+
+        if Gosu.button_down?(Gosu::KbEscape)
+            close 
+        end
+
+        if @input_pos > 2 
+
+            @input_pos = 2
+
+        
+        elsif @input_pos < 0
+
+            @input_pos = 0
+
+        end
+        
+        if @action == "started" && @timer != 0
+            puts("timertest")
+            if Time.now - @lasttimer_time > 1
+                @lasttimer_time = Time.now
+                @timer -= 1
+            end
         end
 
         if !(mouse_x < 0 || mouse_x > @width || mouse_y < 0 || mouse_y > @height) && Gosu.button_down?(Gosu::KB_SPACE)
@@ -93,57 +165,50 @@ class Game < Gosu::Window
             @released = false
         end
 
-        if Gosu.button_down?(Gosu::KbEscape)
-            close 
-        end
-
-        if @input_pos > 30 
-
-            @input_pos = 30
-
-        elsif @input_pos < 0
-
-            @input_pos = 0
-
-        end
-
+        
     end
 
     def draw
         
-        @menu.draw()
+        @menu.draw(@input_pos, @action, @plrs)
 
         @text.draw(10, 20, 0, 1, 1, Gosu::Color.new(@color))
-        if @reveal_word
-            @word.draw(10, 50, 0, 1, 1, Gosu::Color.new(@color))
-        else
-            @word.draw(10, 50, 0, 1, 1, Gosu::Color.new(0x00_000000))
-        end
 
-        @drawing.each do |index|
-            @old_value = nil
-            index.each do |coord, color|
-                draw_rect(coord[0] * @pixel_size, coord[1] * @pixel_size, @pixel_size, @pixel_size, Gosu::Color.new(color))
-                if @old_value.class != NilClass
-                    draw_line(coord[0] * @pixel_size, coord[1] * @pixel_size, Gosu::Color.new(color), @old_value[0] * @pixel_size, @old_value[1] * @pixel_size, Gosu::Color.new(color))
-                end
-                @old_value = coord
+        @player_count.draw(1200, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
+
+      
+        if @action == "started" && @timer > 0
+            @timer_text.draw(1000, 20, 0, 1, 1, Gosu::Color.new(@color))
+
+            if @reveal_word
+                
+                @word.draw(10, 50, 0, 1, 1, Gosu::Color.new(@color))
             end
-        end
-        @draw_section.each do |coord, color|
-            draw_rect(coord[0] * @pixel_size, coord[1] * @pixel_size, @pixel_size, @pixel_size, Gosu::Color.new(color))
-        end
+            
+            
+            @drawing.each do |index|
+                @old_value = nil
+                index.each do |coord, color|
+                    draw_rect(coord[0] * @pixel_size, coord[1] * @pixel_size, @pixel_size, @pixel_size, Gosu::Color.new(color))
+                    if @old_value.class != NilClass
+                        draw_line(coord[0] * @pixel_size, coord[1] * @pixel_size, Gosu::Color.new(color), @old_value[0] * @pixel_size, @old_value[1] * @pixel_size, Gosu::Color.new(color))
+                    end
+                    @old_value = coord
+                end
+            end
+            @draw_section.each do |coord, color|
+                draw_rect(coord[0] * @pixel_size, coord[1] * @pixel_size, @pixel_size, @pixel_size, Gosu::Color.new(color))
+            end
     end
-end
+    end
+end           
+
+    
 
 
 class Menu
 
-    attr_accessor :input_pos
-
-    def initialize(input_pos)
-
-        @position = input_pos
+    def initialize()
 
         @title = Gosu::Image.from_text(self, "paintly: more than art", Gosu.default_font_name, 90)
 
@@ -153,33 +218,47 @@ class Menu
 
         @exit = Gosu::Image.from_text(self, "Exit", Gosu.default_font_name, 60)
         
+        # Game start
+        
+        
     end
 
-    def draw
+    def draw(position, action, plrs)
 
-        @title.draw(600, 100, 0, 1, 1, Gosu::Color.new(0xffffffff))
+        @start = Gosu::Image.from_text(self, "Choose amount of players: #{plrs}, and click 'P' to play", Gosu.default_font_name, 60)
 
-        case @position
-            
-        when 0..10
-            @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xffffffff))
-            @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
-            @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
-        when 11..20
-            @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
-            @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xffffffff))
-            @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
-        when 21..30
-            @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
-            @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
-            @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xffffffff))
+        p action        
+
+        if action == "home"
+
+            @title.draw(600, 100, 0, 1, 1, Gosu::Color.new(0xffffffff))
+
+            case position
+ 
+            when 0
+                @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xffffffff))
+                @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
+                @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
+            when 1
+                @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
+                @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xffffffff))
+                @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
+            when 2
+                @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
+                @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
+                @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xffffffff))
+            end
+        elsif action == "start"
+
+            @start.draw(600, 100, 0, 1, 1, Gosu::Color.new(0xffffffff))
+
+        elsif action == "started"
+
         end
 
     end
 
-
+  
 end
 
-
 Game.new.show
-
