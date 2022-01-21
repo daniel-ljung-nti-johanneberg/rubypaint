@@ -48,6 +48,8 @@ class Game < Gosu::Window
 
         @plrs = 0
 
+        @rounds = 0
+
         @crrnt_plr = 0
 
         @timer = 0
@@ -59,6 +61,8 @@ class Game < Gosu::Window
         @player_count = Gosu::Image.from_text(self, "Player #{@crrnt_plr} turn:", Gosu.default_font_name, 60)
 
         @timer_text = Gosu::Image.from_text(self, "Timer:#{@timer} ", Gosu.default_font_name, 45)
+
+        @rounds_text = Gosu::Image.from_text(self, "Round:#{@rounds} ", Gosu.default_font_name, 45)
 
 
         if Gosu.button_down?(Gosu::KbLeft)
@@ -116,8 +120,9 @@ class Game < Gosu::Window
             @action = "start"
         end
 
-        if Gosu.button_down?(Gosu::KbP) && @action == "start"
+        if Gosu.button_down?(Gosu::KbP) && @action == "start" &&  @action != "started"
             @action = "started"
+            @rounds = @plrs * 2
             @timer = 20
         end
 
@@ -128,9 +133,10 @@ class Game < Gosu::Window
             end
         end
 
-        if @timer == 0
+        if @timer == 0 && @rounds != 0
             @timer = 20
             @crrnt_plr += 1
+            @drawing = []
         end
 
         if Gosu.button_down?(Gosu::KbEscape)
@@ -175,6 +181,7 @@ class Game < Gosu::Window
         @text.draw(10, 20, 0, 1, 1, Gosu::Color.new(@color))
 
         @player_count.draw(1200, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
+        @rounds_text.draw(200, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
 
       
         if @action == "started" && @timer > 0
