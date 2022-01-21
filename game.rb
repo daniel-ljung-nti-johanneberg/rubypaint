@@ -21,6 +21,8 @@ class Game < Gosu::Window
 
         @delay = 0.3
     
+        @menu = Menu.new(@input_pos)
+
         @pixel_size = 2
         
         super @width, @height, fullscreen: true
@@ -105,13 +107,6 @@ class Game < Gosu::Window
 
         end
 
-        if Time.now - @last_time > @delay
-            @menu = Menu.new(@input_pos)
-            @last_time = Time.now
-        end
-
-
-
     end
 
     def draw
@@ -165,6 +160,7 @@ class Menu
         @title.draw(600, 100, 0, 1, 1, Gosu::Color.new(0xffffffff))
 
         case @position
+            
         when 0..10
             @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xffffffff))
             @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
