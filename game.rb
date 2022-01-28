@@ -34,7 +34,7 @@ class Game < Gosu::Window
 
         @i = 0
 
-        @word_list = ["gurka","äpple","sten","hus", "snowboard"]
+        @word_list = ["gurka","äpple","sten","hus","snowboard","läkare","torn","biljard","helikopter","landskap"]
 
         @random_word = @word_list[rand(0..(@word_list.length-1))]
 
@@ -50,15 +50,17 @@ class Game < Gosu::Window
 
         @rounds = 0
 
-        @crrnt_plr = 0
+        @crrnt_plr = 1
 
         @timer = 0
+
+        @halfway = 0
 
     end
  
     def update
 
-        @player_count = Gosu::Image.from_text(self, "Player #{@crrnt_plr} turn:", Gosu.default_font_name, 60)
+        @player_count_text = Gosu::Image.from_text(self, "Player #{@crrnt_plr} turn:", Gosu.default_font_name, 60)
 
         @timer_text = Gosu::Image.from_text(self, "Timer:#{@timer} ", Gosu.default_font_name, 45)
 
@@ -99,67 +101,87 @@ class Game < Gosu::Window
 
         if Gosu.button_down?(Gosu::KbR)
             @reveal_word = true
-        end
-
-        if Gosu.button_down?(Gosu::KB_SPACE) && @action == "start"
-            if Time.now - @last_time > @delay
-                @plrs += 1
-                @last_time = Time.now
-            end
-        end
-
-        
-        if Gosu.button_down?(Gosu::KB_BACKSPACE) && @action == "start"
-            if Time.now - @last_time > @delay && @plrs != 1
-                @plrs -= 1
-                @last_time = Time.now
-            end
-        end
-
-        if Gosu.button_down?(Gosu::KB_SPACE) && @input_pos == 0
-            @action = "start"
-        end
-
-        if Gosu.button_down?(Gosu::KbP) && @action == "start" &&  @action != "started"
-            @action = "started"
-            @rounds = @plrs * 2
-            @timer = 20
-        end
-
-        if Gosu.button_down?(Gosu::KbE) && @action == "started"
-            if Time.now - @last_time > @delay && @crrnt_plr != @plrs
-                @crrnt_plr += 1
-                @last_time = Time.now
-            end
-        end
-
-        if @timer == 0 && @rounds != 0
-            @timer = 20
-            @crrnt_plr += 1
-            @drawing = []
+        else
+            @reveal_word = false
         end
 
         if Gosu.button_down?(Gosu::KbEscape)
             close 
         end
 
-        if @input_pos > 2 
-
-            @input_pos = 2
-
-        
-        elsif @input_pos < 0
-
-            @input_pos = 0
-
-        end
-        
-        if @action == "started" && @timer != 0
-            puts("timertest")
-            if Time.now - @lasttimer_time > 1
-                @lasttimer_time = Time.now
-                @timer -= 1
+        if Gosu.button_down?(Gosu::KB_SPACE) && @action != "started"
+            case @input_pos
+            when 0
+                @action = "start"
+            when 1
+                @action = "controls"
             end
+        end
+
+        if Gosu.button_down?(Gosu::KB_Q) && @action != "started"
+            @action = "home"
+        end
+
+        if @action == "start"
+
+            if Gosu.button_down?(Gosu::KB_SPACE)
+                if Time.now - @last_time > @delay
+                    @plrs += 1
+                    @last_time = Time.now
+                end
+            end
+        
+            if Gosu.button_down?(Gosu::KB_BACKSPACE)
+                if Time.now - @last_time > @delay && @plrs != 1
+                    @plrs -= 1
+                    @last_time = Time.now
+                end
+            end
+
+            if Gosu.button_down?(Gosu::KbP) && @action != "started"
+                @action = "started"
+                @rounds = @plrs * 2
+                @timer = 30
+            end
+        end
+
+
+        if @action == "started"
+
+            if Gosu.button_down?(Gosu::KbE)
+                if Time.now - @last_time > @delay
+                    @timer = 0
+                    @last_time = Time.now
+                end
+            end
+
+            if @timer != 0
+                if Time.now - @lasttimer_time > 1
+                    @lasttimer_time = Time.now
+                    @timer -= 1
+                end
+            end
+
+            if @timer == 0 && @rounds != 0
+                @timer = 30
+                @crrnt_plr += 1
+                @drawing = []
+                @random_word = @word_list[rand(0..(@word_list.length-1))]
+                @word = Gosu::Image.from_text(self, @random_word, Gosu.default_font_name, 90)
+            end
+
+            if @crrnt_plr >= (@rounds/2)+1
+                @crrnt_plr = 1
+                @halfway += 1 
+            end
+
+            if @halfway == 2
+                @action = "home"
+                @crrnt_plr = 1
+                @plrs = 0
+                @halfway = 0
+            end
+
         end
 
         if !(mouse_x < 0 || mouse_x > @width || mouse_y < 0 || mouse_y > @height) && Gosu.button_down?(Gosu::KB_SPACE)
@@ -171,7 +193,16 @@ class Game < Gosu::Window
             @released = false
         end
 
-        
+        if @input_pos > 2 
+
+            @input_pos = 2
+
+        elsif @input_pos < 0
+
+            @input_pos = 0
+
+        end
+  
     end
 
     def draw
@@ -180,7 +211,7 @@ class Game < Gosu::Window
 
         @text.draw(10, 20, 0, 1, 1, Gosu::Color.new(@color))
 
-        @player_count.draw(1200, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
+        @player_count_text.draw(1200, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
         @rounds_text.draw(200, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
 
       
@@ -188,7 +219,6 @@ class Game < Gosu::Window
             @timer_text.draw(1000, 20, 0, 1, 1, Gosu::Color.new(@color))
 
             if @reveal_word
-                
                 @word.draw(10, 50, 0, 1, 1, Gosu::Color.new(@color))
             end
             
@@ -206,7 +236,7 @@ class Game < Gosu::Window
             @draw_section.each do |coord, color|
                 draw_rect(coord[0] * @pixel_size, coord[1] * @pixel_size, @pixel_size, @pixel_size, Gosu::Color.new(color))
             end
-    end
+        end
     end
 end           
 
@@ -221,22 +251,20 @@ class Menu
 
         @play = Gosu::Image.from_text(self, "Start game", Gosu.default_font_name, 60)
 
-        @settings = Gosu::Image.from_text(self, "Settings", Gosu.default_font_name, 60)
+        @controls = Gosu::Image.from_text(self, "Controls", Gosu.default_font_name, 60)
 
-        @exit = Gosu::Image.from_text(self, "Exit", Gosu.default_font_name, 60)
-        
-        # Game start
-        
+        @controls_info = Gosu::Image.from_text(self, "Select colors with the 'Arrow Keys'\nReveal word with 'r'\nExit with 'Escape'\nSkip turn with 'e'\nUndo with 'ctrl + z'", Gosu.default_font_name, 60)
+
+        @exit = Gosu::Image.from_text(self, "Exit", Gosu.default_font_name, 60)  
         
     end
 
     def draw(position, action, plrs)
 
-        @start = Gosu::Image.from_text(self, "Choose amount of players: #{plrs}, and click 'P' to play", Gosu.default_font_name, 60)
+        @start = Gosu::Image.from_text(self, "Choose amount of players: #{plrs}, and click 'P' to play", Gosu.default_font_name, 60)       
 
-        p action        
-
-        if action == "home"
+        case action
+        when "home"
 
             @title.draw(600, 100, 0, 1, 1, Gosu::Color.new(0xffffffff))
 
@@ -244,22 +272,26 @@ class Menu
  
             when 0
                 @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xffffffff))
-                @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
+                @controls.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
                 @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
             when 1
                 @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
-                @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xffffffff))
+                @controls.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xffffffff))
                 @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
             when 2
                 @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
-                @settings.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
+                @controls.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
                 @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xffffffff))
             end
-        elsif action == "start"
+        when "controls"
+
+            @controls_info.draw(10, 200, 0, 1, 1, Gosu::Color.new(0xffffffff))
+
+        when "start"
 
             @start.draw(600, 100, 0, 1, 1, Gosu::Color.new(0xffffffff))
 
-        elsif action == "started"
+        when "started"
 
         end
 
