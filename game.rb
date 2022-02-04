@@ -34,7 +34,7 @@ class Game < Gosu::Window
 
         @i = 0
 
-        @word_list = ["gurka","äpple","sten","hus","snowboard","läkare","torn","biljard","helikopter","landskap"]
+        @word_list = ["gurka","äpple","sten","hus","snowboard","läkare","torn","biljard","helikopter","landskap","skatt"]
 
         @random_word = @word_list[rand(0..(@word_list.length-1))]
 
@@ -109,20 +109,9 @@ class Game < Gosu::Window
             close 
         end
 
-        if Gosu.button_down?(Gosu::KB_SPACE) && @action != "started"
-            case @input_pos
-            when 0
-                @action = "start"
-            when 1
-                @action = "controls"
-            end
-        end
-
-        if Gosu.button_down?(Gosu::KB_Q) && @action != "started"
-            @action = "home"
-        end
-
         if @action == "start"
+
+            @input_pos = 0
 
             if Gosu.button_down?(Gosu::KB_SPACE)
                 if Time.now - @last_time > @delay
@@ -145,43 +134,66 @@ class Game < Gosu::Window
             end
         end
 
-
         if @action == "started"
 
-            if Gosu.button_down?(Gosu::KbE)
-                if Time.now - @last_time > @delay
-                    @timer = 0
-                    @last_time = Time.now
+            case @plrs
+            when 1
+                @timer = 999
+                @plrs = 1
+                @crrnt_plr = 1
+
+            else
+
+                if Gosu.button_down?(Gosu::KbE)
+                    if Time.now - @last_time > @delay
+                        @timer = 0
+                        @last_time = Time.now
+                    end
+                end
+
+                if @timer != 0
+                    if Time.now - @lasttimer_time > 1
+                        @lasttimer_time = Time.now
+                        @timer -= 1
+                    end
+                end
+
+                if @timer == 0 && @rounds != 0
+                    @timer = 30
+                    @crrnt_plr += 1
+                    @drawing = []
+                    @random_word = @word_list[rand(0..(@word_list.length-1))]
+                    @word = Gosu::Image.from_text(self, @random_word, Gosu.default_font_name, 90)
+                end
+
+                if @crrnt_plr >= (@rounds/2)+1
+                    @crrnt_plr = 1
+                    @halfway += 1 
+                end
+
+                if @halfway == 2
+                    @action = "home"
+                    @crrnt_plr = 1
+                    @plrs = 1
+                    @halfway = 0
                 end
             end
+        end
 
-            if @timer != 0
-                if Time.now - @lasttimer_time > 1
-                    @lasttimer_time = Time.now
-                    @timer -= 1
+        if @action != "started"
+
+            if Gosu.button_down?(Gosu::KB_SPACE)
+                case @input_pos
+                when 0
+                    @action = "start"
+                when 1
+                    @action = "controls"
                 end
             end
+        end
 
-            if @timer == 0 && @rounds != 0
-                @timer = 30
-                @crrnt_plr += 1
-                @drawing = []
-                @random_word = @word_list[rand(0..(@word_list.length-1))]
-                @word = Gosu::Image.from_text(self, @random_word, Gosu.default_font_name, 90)
-            end
-
-            if @crrnt_plr >= (@rounds/2)+1
-                @crrnt_plr = 1
-                @halfway += 1 
-            end
-
-            if @halfway == 2
-                @action = "home"
-                @crrnt_plr = 1
-                @plrs = 0
-                @halfway = 0
-            end
-
+        if Gosu.button_down?(Gosu::KB_Q)
+            @action = "home"
         end
 
         if !(mouse_x < 0 || mouse_x > @width || mouse_y < 0 || mouse_y > @height) && Gosu.button_down?(Gosu::KB_SPACE)
@@ -193,9 +205,9 @@ class Game < Gosu::Window
             @released = false
         end
 
-        if @input_pos > 2 
+        if @input_pos > 1
 
-            @input_pos = 2
+            @input_pos = 1
 
         elsif @input_pos < 0
 
@@ -216,10 +228,10 @@ class Game < Gosu::Window
 
       
         if @action == "started" && @timer > 0
-            @timer_text.draw(1000, 20, 0, 1, 1, Gosu::Color.new(@color))
+            @timer_text.draw(1000, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
 
             if @reveal_word
-                @word.draw(10, 50, 0, 1, 1, Gosu::Color.new(@color))
+                @word.draw(10, 50, 0, 1, 1, Gosu::Color.new(0xffffffff))
             end
             
             
@@ -254,8 +266,6 @@ class Menu
         @controls = Gosu::Image.from_text(self, "Controls", Gosu.default_font_name, 60)
 
         @controls_info = Gosu::Image.from_text(self, "Select colors with the 'Arrow Keys'\nReveal word with 'r'\nExit with 'Escape'\nSkip turn with 'e'\nUndo with 'ctrl + z'", Gosu.default_font_name, 60)
-
-        @exit = Gosu::Image.from_text(self, "Exit", Gosu.default_font_name, 60)  
         
     end
 
@@ -273,15 +283,9 @@ class Menu
             when 0
                 @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xffffffff))
                 @controls.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
-                @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
             when 1
                 @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
                 @controls.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xffffffff))
-                @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xff_808080))
-            when 2
-                @play.draw(600, 200, 0, 1, 1, Gosu::Color.new(0xff_808080))
-                @controls.draw(600, 260, 0, 1, 1, Gosu::Color.new(0xff_808080))
-                @exit.draw(600, 320, 0, 1, 1, Gosu::Color.new(0xffffffff))
             end
         when "controls"
 
