@@ -15,7 +15,11 @@ class Game < Gosu::Window
 
         @lasttimer_time = Time.now
 
+        @lastdisplay_wordtime = Time.now
+
         @delay = 0.1
+
+        @last_Word = ""
 
         @pixel_size = 2
         
@@ -60,7 +64,7 @@ class Game < Gosu::Window
  
     def update
 
-        @player_count_text = Gosu::Image.from_text(self, "Player #{@crrnt_plr} turn:", Gosu.default_font_name, 60)
+        @player_count_text = Gosu::Image.from_text(self, "Player #{@crrnt_plr}'s turn", Gosu.default_font_name, 60)
 
         @timer_text = Gosu::Image.from_text(self, "Timer:#{@timer} ", Gosu.default_font_name, 45)
 
@@ -99,7 +103,7 @@ class Game < Gosu::Window
             end
         end
 
-        if Gosu.button_down?(Gosu::KbR)
+        if Gosu.button_down?(Gosu::KbR) && @timer != 20
             @reveal_word = true
         else
             @reveal_word = false
@@ -130,7 +134,7 @@ class Game < Gosu::Window
             if Gosu.button_down?(Gosu::KbP) && @action != "started"
                 @action = "started"
                 @rounds = @plrs * 2
-                @timer = 30
+                @timer = 20
             end
         end
 
@@ -159,7 +163,12 @@ class Game < Gosu::Window
                 end
 
                 if @timer == 0 && @rounds != 0
-                    @timer = 30
+                    @last_Word = @random_word
+                    @reveal_word = true
+
+                    @lastdisplay_wordtime = Time.now
+                    
+                    @timer = 20
                     @crrnt_plr += 1
                     @drawing = []
                     @random_word = @word_list[rand(0..(@word_list.length-1))]
@@ -214,6 +223,14 @@ class Game < Gosu::Window
             @input_pos = 0
 
         end
+
+
+        if Time.now - @lastdisplay_wordtime < 3
+            @timer_text = Gosu::Image.from_text(self, "Ordet var #{@last_Word}", Gosu.default_font_name, 45)
+            @timer = 20
+        else
+            @timer_text = Gosu::Image.from_text(self, "Timer:#{@timer} ", Gosu.default_font_name, 45)
+        end
   
     end
 
@@ -223,9 +240,10 @@ class Game < Gosu::Window
 
         @text.draw(10, 20, 0, 1, 1, Gosu::Color.new(@color))
 
-        @player_count_text.draw(1200, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
+        @player_count_text.draw(1500, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
         @rounds_text.draw(200, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
-
+        
+       
       
         if @action == "started" && @timer > 0
             @timer_text.draw(1000, 20, 0, 1, 1, Gosu::Color.new(0xffffffff))
